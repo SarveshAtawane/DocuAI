@@ -1,0 +1,95 @@
+<!-- File: templates/emailtemplate.html -->
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333333;
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: #f4f4f4;
+            }
+            .container {
+                background-color: #ffffff;
+                border-radius: 5px;
+                padding: 30px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #0066cc;
+                text-align: center;
+                border-bottom: 2px solid #0066cc;
+                padding-bottom: 10px;
+            }
+            .otp {
+                font-size: 32px;
+                font-weight: bold;
+                text-align: center;
+                color: #0066cc;
+                letter-spacing: 5px;
+                margin: 20px 0;
+                padding: 10px;
+                background-color: #e6f2ff;
+                border-radius: 5px;
+            }
+            .otp_time_limit {
+                font-size: 12px;
+                font-weight: bold;
+                text-align: center;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            
+            .warning {
+                background-color: #fff3cd;
+                border-left: 5px solid #ffeeba;
+                padding: 10px;
+                margin-top: 20px;
+            }
+            .footer {
+                margin-top: 20px;
+                text-align: center;
+                font-size: 0.9em;
+                color: #666666;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Your One-Time Password (OTP)</h1>
+            <p>Hello, {{ username }} welcome to <strong style="color:#CE7D4B;">SAASyQiD</strong>.</p>
+            <p>Please use the following One Time Password for verification:</p>
+            <div class="otp">{{ otp }}</div>
+            <div class="otp_time_limit">
+                <h2><strong>This OTP is valid only for <strong style="color: red;">one</strong> minute.</strong></h2>
+            </div>
+            <div class="warning">
+                <strong>Warning:</strong> If you didn't request this OTP, please ignore this email and contact our support team immediately.
+            </div>
+            <p>If you have any questions or concerns, please don't hesitate to contact our support team.</p>
+            <p>Thank you for using our service!</p>
+            <div class="footer">
+                <p>Best regards,<br>{{ sender_name }}</p>
+                <p>This is an automated message, please do not reply directly to this email.</p>
+            </div>
+        </div>
+        <script>
+        document.getElementById('copyButton').addEventListener('click', function() {
+            var otp = document.querySelector('.otp').textContent;
+            var button = this;
+            var originalText = button.textContent;
+            
+            navigator.clipboard.writeText(otp).then(function() {
+                button.textContent = 'Copied!';
+                setTimeout(function() {
+                    button.textContent = originalText;
+                }, 2000);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+        </script>
+    </body>
+</html>
