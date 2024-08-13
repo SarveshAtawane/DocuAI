@@ -1,0 +1,82 @@
+Sarvesh Atawane
+Roll No.:BT22CSA002
+B.Tech - CSE (AI & ML) 2026
+Gender: Male
+Indian Institute Of Information Technology, Nagpur
++91-9527699807
+bt22csa002@iiitn.ac.in
+sarveshatawane03@gmail.com
+Github | Leetcode | Kaggle
+linkedin.com/in/sarvesh-atawane
+Education
+Degree/Certificate
+B.Tech. CSE
+Institute/Board
+Indian Institute of Information Technology, Nagpur
+CGPA/Percentage
+9.48
+Year
+2022-2026
+Experience
+•
+Linux Foundation Mentorship Intern at Hyperledger Labs
+Creating a user-friendly ChatBot GUI and deploying a prototype for Hyperledger Labs AIFAQ.
+June 2024 - present
+Remote
+– One of the four selected mentee from 744 proposals for this prestigious project
+– Delivered a fully functional chatbot prototype with React for the frontend and Django for the backend, deploying
+the LLM on a Cloud GPU Server.
+Projects
+•
+Retrieval-Augmented Generation (RAG) | Self Project
+Enriching text generation with external knowledge repositories via RAG framework.
+May 2024
+Github Link
+– Utilized Langchain framework for integrating Mistral LLM with Chroma DB for efficient storage and retrieval.
+– Created a user-friendly frontend using React and backend in Django and hosted the model on online GPU server.
+•
+Navigation Aid for the Blind using Generative AI | Research Project
+Enhancing Mobility for the Blind with Generative AI-powered Visual Description.
+May 2024 - June 2024
+Drive Link
+– Deployed the open source LLAVA multimodal LLM model on online GPU server for faster image description.
+– Developed a voice-controlled camera app with seamless Flask server integration for model communication.
+•
+Optical Character Recognition-Based Meter Reading System | Self Project
+Automate the process of reading electricity meter values from images.
+Nov 2023 - Dec 2023
+Github Link
+– Employed image preprocessing techniques like grayscale conversion, bilateral filtering, edge detection, contour
+detection, and approximation algorithms to enhance and accurately isolate meter display area for cropping.
+– Integrated EasyOCR for robust OCR on cropped images, extracting numbers with visual confirmation overlay.
+•
+Cartesian Fused Deposition Modelling 3d Printer | Self Project
+Nov 2017 - April 2018
+Engineered a customized and versatile 3D Printing Solution.
+– Worked in a team of 3 to Engineer and Build a Cartesian 3d Printer from scratch with a total budget of INR 15k.
+– Secured a prodigy prize in a District Level Science Expo organized by KK Wagh College of Engineering, Nashik.
+•
+ATMega328P based Multirotor Aircraft | Self Project
+Nov 2017 - April 2018
+Tailored a Multirotor Aerial System.
+– Implemented custom firmware optimizations to enhance flight stability and smoothness.
+– Conducted an interactive workshop delving into the nuances of drone building, flying techniques, and relevant
+regulations, garnering the enthusiastic participation of 10 individuals.
+Positions of Responsibility
+•
+AI & ML Lead, Elevate Club, IIIT NAGPUR
+Sep. 2023 - Present
+– Conducted GEN A THON a national-level AI hackathon with 750+ registrations
+– Organised workshops mentoring over 50 students
+Achievements
+•
+•
+Data Structures and Algorithms, Solved over 500+ DSA questions across various platforms.
+Competitive Programming, 3-star rated:1684 on CodeChef.
+Skills
+Programming: Python, C/C++, Java
+• Tools/Frameworks: Langchain, Ollama ,RAG, Chroma DB, Transformers, Keras, Tensorflow, Pytorch, OpenCV,
+Django, Flask, React, FastAPI, Node.js, Postman, Docker
+• Operating Systems: Windows, Linux
+• IOT: Arduino, ESP, Rasberry Pi
+•

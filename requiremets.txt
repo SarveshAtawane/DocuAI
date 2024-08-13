@@ -1,0 +1,4 @@
+"pymongo[srv]"
+fastapi 
+uvicorn 
+sqlalchemy
