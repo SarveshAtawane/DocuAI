@@ -7,7 +7,8 @@ from auth import email_verification
 import bcrypt
 from datetime import datetime, timedelta
 from datetime import datetime, timezone
-import datetime 
+import datetime
+import jwt
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./DB/sql_app.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -21,6 +22,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_verified = Column(Boolean, default=False)
+    token = Column(String, default="None")
 
 class OTP(Base):
     __tablename__ = "otps"
@@ -28,9 +30,10 @@ class OTP(Base):
     email = Column(String, index=True)
     otp = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now(timezone.utc))
+
 Base.metadata.create_all(bind=engine)  # Recreate all tables with the updated schema
 
-router = APIRouter()
+sql_router = APIRouter()
 
 class UserCreate(BaseModel):
     username: str
@@ -46,6 +49,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     is_verified: bool
+    token: str
     class Config:
         orm_mode = True
 
@@ -60,7 +64,7 @@ def get_db():
     finally:
         db.close()
 
-@router.post("/signin/", response_model=UserResponse)
+@sql_router.post("/signin/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user:
@@ -69,7 +73,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     otp = email_verification.send_email_with_otp(user.email, user.username)
     hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
     
-    db_user = User(username=user.username, email=user.email, hashed_password=hashed_password.decode('utf-8'), is_verified=False)
+    db_user = User(username=user.username, email=user.email, hashed_password=hashed_password.decode('utf-8'), is_verified=False, token=None)
     db_otp = OTP(email=user.email, otp=otp)
     
     db.add(db_user)
@@ -79,14 +83,8 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     
     return db_user
 
-@router.get("/users/{user_email}", response_model=UserResponse)
-async def get_user(user_email: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_email).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
 
-@router.post("/login/")
+@sql_router.post("/login/")
 async def login_user(user: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == user.email).first()
     if db_user is None:
@@ -95,9 +93,10 @@ async def login_user(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid password")
     if not db_user.is_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
+    
     return {"message": "Login successful"}
 
-@router.post("/verify-otp/")
+@sql_router.post("/verify-otp/")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     db_otp = db.query(OTP).filter(OTP.email == otp_data.email).order_by(OTP.created_at.desc()).first()
     if db_otp is None:
@@ -105,19 +104,38 @@ async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     
     if db_otp.otp != otp_data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
-    print(datetime.datetime.now(timezone.utc))
-    print(db_otp.created_at)
-    db_otp_time = db_otp.created_at.replace(tzinfo=timezone.utc)
-    if datetime.datetime.now(timezone.utc) - db_otp_time > timedelta(minutes=1):
-        raise HTTPException(status_code=400, detail="OTP expired")
     
-    # Mark user as verified
+    db_otp_time = db_otp.created_at.replace(tzinfo=timezone.utc)
+    if datetime.datetime.now(timezone.utc) - db_otp_time > timedelta(minutes=10):
+
+        raise HTTPException(status_code=400, detail="OTP expired.")
+    
+    # Mark user as verified and assign a verification token
     db_user = db.query(User).filter(User.email == otp_data.email).first()
     db_user.is_verified = True
+    token = jwt.encode({"user_id": db_user.id}, "secret_key", algorithm="HS256")
+    db_user.token = token
     db.commit()
     
     # Delete the used OTP
     db.delete(db_otp)
     db.commit()
-    # return {datetime.datetime.now(timezone.utc)}
-    return {"message": "Email verified successfully"}
+    
+    return {"message": "Email verified successfully", "user": {"id": db_user.id, "username": db_user.username, "email": db_user.email, "is_verified": db_user.is_verified, "token": db_user.token}}
+
+@sql_router.post("/resend-verification-email/")
+async def resend_verification_email(email: str, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == email).first()
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if db_user.is_verified:
+        raise HTTPException(status_code=400, detail="User is already verified")
+    
+    otp = email_verification.send_email_with_otp(db_user.email, db_user.username)
+    
+    db_otp = OTP(email=db_user.email, otp=otp)
+    db.add(db_otp)
+    db.commit()
+    
+    return {"message": "Verification email sent successfully"}

@@ -54,5 +54,3 @@ def send_email_with_otp(receiver_email: str,username:str):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
-# if __name__ == "__main__":
-#     send_email_with_otp()
