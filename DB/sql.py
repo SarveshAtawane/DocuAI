@@ -94,7 +94,7 @@ async def login_user(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user.is_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
     
-    return {"message": "Login successful"}
+    return {"message": "Login successful", "user": {"id": db_user.id, "username": db_user.username, "email": db_user.email, "is_verified": db_user.is_verified, "token": db_user.token}}
 
 @sql_router.post("/verify-otp/")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
