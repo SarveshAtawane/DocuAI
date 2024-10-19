@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuAI - Create Your Own AI Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Quicksand', sans-serif;
+            color: #fff;
+            height: 100%;
+            background-color: #0a0a0a;
+            background-attachment: fixed;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 1;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(238,130,238,0.1) 0%, rgba(238,130,238,0) 50%);
+            z-index: -1;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 20px 0;
+            animation: slideDown 1s ease-out;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4a0e4e;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-family: 'Quicksand', sans-serif;
+        }
+        .btn-primary {
+            background-color: #4a0e4e;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #5c1161;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #EAD8B1;
+        }
+        .btn-secondary {
+            background-color: transparent;
+            color: #ffffff;
+            border: 2px solid #4a0e4e;
+        }
+        .btn-secondary:hover {
+            background-color: #4a0e4e;
+            color: #EAD8B1;
+            transform: translateY(-2px);
+            
+        }
+        main {
+            text-align: center;
+            max-width: 800px;
+            color: #EAD8B1;
+            margin: auto;
+            animation: slideUp 1s ease-out;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #e0e0e0;
+            font-weight: 400;
+        }
+        .cta-btn {
+            font-size: 18px;
+            padding: 15px 30px;
+            font-weight: 600;
+            animation: fadeIn 1s ease-out 0.5s both;
+        }
+        .features {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+            width: 100%;
+        }
+        .feature {
+            text-align: center;
+            max-width: 250px;
+            animation: fadeIn 1s ease-out 1s both;
+        }
+        .feature h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4a0e4e;
+        }
+        .feature p {
+            font-size: 16px;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">DocuAI</div>
+            <div class="auth-buttons">
+                <button class="btn btn-secondary">Login</button>
+                <button class="btn btn-primary">Sign Up</button>
+            </div>
+        </header>
+        <main>
+            <h1>Transform Your Documentation into an AI-Powered Chatbot</h1>
+            <p>Upload your docs, get an API, and integrate a custom AI assistant into your product in minutes.</p>
+            <button class="btn btn-primary cta-btn">Start Free Trial</button>
+            <div class="features">
+                <!-- <div class="feature">
+                    <h3>Easy Upload</h3>
+                    <p>Simply upload your documentation files and let DocuAI do the rest.</p>
+                </div>
+                <div class="feature">
+                    <h3>Custom API</h3>
+                    <p>Get a unique API tailored to your documentation for seamless integration.</p>
+                </div>
+                <div class="feature">
+                    <h3>Intelligent Assistance</h3>
+                    <p>Our AI understands context and provides accurate, helpful responses.</p>
+                </div> -->
+            </div>
+        </main>
+    </div>
+</body>
+</html>

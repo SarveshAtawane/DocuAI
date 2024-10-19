@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuAI - Verify OTP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Quicksand', sans-serif;
+            background-color: #000000;
+            color: #EAD8B1;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background-color: #111111;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(74, 14, 78, 0.3);
+            width: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(238,14,78,0.1) 0%, rgba(238,14,78,0) 70%);
+            z-index: 0;
+        }
+        .logo, h1, p, form, .resend {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+        .logo { animation-delay: 0.1s; }
+        h1 { animation-delay: 0.2s; }
+        p { animation-delay: 0.3s; }
+        form { animation-delay: 0.4s; }
+        .resend { animation-delay: 0.5s; }
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        .logo svg {
+            width: 80px;
+            height: 80px;
+        }
+        h1 {
+            color: #EAD8B1;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 300;
+            font-size: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        p {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+        input {
+            margin-bottom: 20px;
+            padding: 12px;
+            background-color: rgba(34, 34, 34, 0.8);
+            border: 1px solid #EAD8B1;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #EAD8B1;
+            font-family: 'Quicksand', sans-serif;
+            text-align: center;
+            letter-spacing: 8px;
+        }
+        input::placeholder {
+            color: #ffffff;
+            letter-spacing: normal;
+        }
+        button {
+            background-color: #4a0e4e;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            font-family: 'Quicksand', sans-serif;
+        }
+        button:hover {
+            background-color: #6a1e6e;
+        }
+        .resend {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 20px;
+            color: #ffffff;
+            position: relative;
+            z-index: 1;
+        }
+        .resend a {
+            color: #EAD8B1;
+            text-decoration: none;
+        }
+        .resend a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="#4a0e4e"/>
+                <text x="50" y="58" font-family="Quicksand" font-size="20" fill="#EAD8B1" text-anchor="middle" font-weight="300">DocuAI</text>
+            </svg>
+        </div>
+        <h1>Verify Your Email</h1>
+        <p>We've sent a 6-digit code to your email. Please enter it below to verify your account.</p>
+        <form>
+            <input type="text" placeholder="Enter OTP" maxlength="6" required>
+            <button type="submit">Verify</button>
+        </form>
+        <div class="resend">
+            Didn't receive the code? <a href="#">Resend OTP</a>
+        </div>
+    </div>
+</body>
+</html>

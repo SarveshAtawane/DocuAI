@@ -1,0 +1,79 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Quicksand', sans-serif;
+    color: #fff;
+    height: 100%;
+    background-color: #0a0a0a;
+  }
+  
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Centers content vertically */
+    align-items: center;     /* Centers content horizontally */
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 20px;
+  }
+  
+  header .logo {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  header .auth-buttons {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+  }
+  
+  .auth-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  .btn-primary {
+    background-color: #4a0e4e;
+    color: white;
+  }
+  
+  .btn-secondary {
+    background-color: transparent;
+    color: white;
+    border: 2px solid #4a0e4e;
+  }
+  
+  main {
+    text-align: center; /* Centers text content */
+    margin-top: 50px;
+  }
+  
+  main h1 {
+    font-size: 36px;
+    margin-bottom: 20px;
+  }
+  
+  main p {
+    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  .cta-btn {
+    background-color: #4a0e4e;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
