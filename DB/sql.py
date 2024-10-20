@@ -123,10 +123,12 @@ async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message": "Email verified successfully", "user": {"id": db_user.id, "username": db_user.username, "email": db_user.email, "is_verified": db_user.is_verified, "token": db_user.token}}
+class ResendOTPRequest(BaseModel):
+    email: str
 
 @sql_router.post("/resend-verification-email/")
-async def resend_verification_email(email: str, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == email).first()
+async def resend_verification_email(request: ResendOTPRequest, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == request.email).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -135,7 +137,11 @@ async def resend_verification_email(email: str, db: Session = Depends(get_db)):
     
     otp = email_verification.send_email_with_otp(db_user.email, db_user.username)
     
-    db_otp = OTP(email=db_user.email, otp=otp)
+    # Delete any existing OTPs for this email
+    db.query(OTP).filter(OTP.email == request.email).delete()
+    
+    # Create a new OTP
+    db_otp = OTP(email=db_user.email, otp=otp, created_at=datetime.datetime.now(timezone.utc))
     db.add(db_otp)
     db.commit()
     
