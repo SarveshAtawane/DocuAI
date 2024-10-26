@@ -1,0 +1,23 @@
+1)
+sigin -> change
+add usenrame in the input field
+
+
+###Done
+
+2)
+store in mongo
+in mongo docs are already stored
+in mongo logs like doc logs are stored
+
+3)
+store in sql (temporary dashboard table)
+count -> count the total objectsat the username in the mongo
+api -> api calls made
+api-key -> key
+
+4)
+shift db to central one so data is stored globally
+
+5)
+in mongo change the nomeclature
