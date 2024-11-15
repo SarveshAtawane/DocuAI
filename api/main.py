@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from DB import sql
 from DB import mongo
+from embeddings import website_loader
+# from embeddings import embed_router
 
 uri = "mongodb+srv://sarveshatawane03:y2flIDD1EmOaU5de@cluster0.sssmr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 mongo.connect(uri)
@@ -19,7 +21,8 @@ app.add_middleware(
 
 app.include_router(sql.sql_router)
 app.include_router(mongo.mongo_router)
-
+# app.include_router(embed_router.router)
+app.include_router(website_loader.crawler_router)
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host="localhost", port=8000)

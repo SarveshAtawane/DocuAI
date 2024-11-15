@@ -1,0 +1,9 @@
+uvicorn main2:app --reload --port 8080
+python3 -m api.main
+
+
+ # Worker for website crawling tasks (use crawl_queue)
+celery -A embeddings.website_loader worker --loglevel=info --concurrency=2 --max-memory-per-child=500000 -Q crawl_queue
+
+# Worker for embedding generation tasks (use embedding_queue)
+celery -A embed.celery_app worker --loglevel=info --concurrency=2 --max-memory-per-child=500000 -Q embedding_queue

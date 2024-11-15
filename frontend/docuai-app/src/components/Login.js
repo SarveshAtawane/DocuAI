@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Home.css';  // Ensure you link your CSS file
+import './Home.css';
 
 const CustomAlert = ({ message, type }) => (
   <div className={`alert ${type === 'error' ? 'alert-error' : 'alert-success'}`}>
@@ -20,22 +20,16 @@ const Login = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [showVerifyButton, setShowVerifyButton] = useState(false);
 
-  const handleSignup = () => {
-    navigate('/signup');
-  };
-
-  const handleHome = () => {
-    navigate('/');
-  };
-
+  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
+  // Handle login submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -55,11 +49,20 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || 'An error occurred during login');
+        throw new Error(data.message || 'An error occurred during login');
       }
 
+      // Extract user data and token from the response
+      const { token, username, email, is_verified } = data.user;
+
+      // Store token and user details in localStorage
+      localStorage.setItem('apiKey', token);
+      localStorage.setItem('username', username);
+      localStorage.setItem('email', email);
+      localStorage.setItem('is_verified', is_verified);
+
       setMessage('Login successful!');
-      // You can add further logic here, such as storing the user token
+      setTimeout(() => navigate('/dashboard'), 1000); // Redirect after a short delay
     } catch (err) {
       if (err.message.includes('User not found')) {
         setError('User not registered');
@@ -74,6 +77,7 @@ const Login = () => {
     }
   };
 
+  // Handle sending OTP for email verification
   const handleSendVerificationOTP = async () => {
     setOtpLoading(true);
     setMessage('');
@@ -91,7 +95,7 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || 'Failed to send verification email');
+        throw new Error(data.message || 'Failed to send verification email');
       }
 
       setMessage('Verification email sent successfully. Please check your inbox.');
@@ -108,11 +112,12 @@ const Login = () => {
   return (
     <div className="container">
       <header>
-        <div className="logo" onClick={handleHome}>DocuAI</div>
+        <div className="logo" onClick={() => navigate('/')}>DocuAI</div>
         <div className="auth-buttons">
-          <button className="btn btn-secondary" onClick={handleSignup}>Sign Up</button>
+          <button className="btn btn-secondary" onClick={() => navigate('/signup')}>Sign Up</button>
         </div>
       </header>
+
       <main>
         <h1>Login</h1>
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -138,16 +143,22 @@ const Login = () => {
             {loginLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
         {(loginLoading || otpLoading) && <p className="loading-text">Processing...</p>}
         {message && <CustomAlert message={message} type="success" />}
         {error && <CustomAlert message={error} type="error" />}
+
         {error === 'User not registered' && (
-          <button className="btn btn-secondary" onClick={handleSignup}>
+          <button className="btn btn-secondary" onClick={() => navigate('/signup')}>
             Sign Up
           </button>
         )}
         {showVerifyButton && (
-          <button className="btn btn-secondary" onClick={handleSendVerificationOTP} disabled={otpLoading}>
+          <button
+            className="btn btn-secondary"
+            onClick={handleSendVerificationOTP}
+            disabled={otpLoading}
+          >
             {otpLoading ? 'Sending OTP...' : 'Send Verification OTP'}
           </button>
         )}

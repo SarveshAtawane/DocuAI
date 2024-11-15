@@ -1,0 +1,201 @@
+/* Basic Styling */
+body {
+    font-family: 'Quicksand', sans-serif;
+    background-color: #000000;
+    color: #e0e0e0;
+    margin: 0;
+}
+
+/* Container Styles */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #000000;
+    color: #e0e0e0;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px;
+    background-color: #111;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.sidebar h2 {
+    font-size: 26px;
+    color: #fff;
+    margin-bottom: 40px;
+}
+
+.sidebar-nav a {
+    color: #b3b3b3;
+    text-decoration: none;
+    font-size: 20px;
+    display: block;
+    padding: 12px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.sidebar-nav a:hover {
+    background-color: #333;
+}
+
+.sidebar-nav a.active {
+    background-color: #4a0e4e;
+    color: #ffffff;
+}
+
+/* Main Content Styles */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    background-color: #000000;
+}
+
+.page-title {
+    font-size: 36px;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+/* Upload Section */
+.upload-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.upload-card {
+    background-color: #111;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.card-header h2 {
+    font-size: 28px;
+    color: #EAD8B1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.file-item{
+    padding-bottom: 5px;
+}
+
+.file-input {
+    width: 98%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #EAD8B1;
+    border-radius: 5px;
+    background-color: #222;
+    color: #e0e0e0;
+    font-size: 18px;
+}
+
+.file-types {
+    color: #cccccc;
+    font-size: 18px;
+    margin-top: 5px;
+}
+
+.selected-files {
+    margin-top: 10px;
+    color: #e0e0e0;
+}
+
+.selected-files h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.selected-files ul {
+    list-style-type: none;
+    padding: 0;
+    color: #cccccc;
+}
+
+.selected-files li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+}
+
+.selected-files .remove-button {
+    font-size: 14px;
+    padding: 5px 10px;
+}
+
+/* Input Styling */
+.text-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #EAD8B1;
+    border-radius: 5px;
+    background-color: #222;
+    color: #e0e0e0;
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+/* Website Links */
+.website-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.website-link-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.add-button,
+.remove-button {
+    background-color: #4a0e4e;
+    color: #ffffff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.add-button:hover {
+    background-color: #5a1e5e;
+}
+
+.remove-button:hover {
+    background-color: #c0392b;
+}
+
+/* Submit Button */
+.submit-button {
+    background-color: #4a0e4e;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 300px;
+    align-self: center;
+}
+
+.submit-button:hover {
+    background-color: #5a1e5e;
+}
+
+.submit-button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}

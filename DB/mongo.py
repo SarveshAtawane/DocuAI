@@ -55,6 +55,44 @@ def log_action(user_token: str, action: str, details: dict):
     log_collection.insert_one(log_document)
 
 # Endpoint to upload documents and log actions
+class UserDetailsResponse(BaseModel):
+    username: str
+    email: str
+
+@mongo_router.get("/user/details/", response_model=UserDetailsResponse)
+async def get_user_details(
+    token: str = Depends(verify_jwt),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Get user from SQL database using token
+        user = db.query(User).filter(User.token == token).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Get document count from MongoDB
+        # collection = db[token]
+        # total_documents = collection.count_documents({})
+        
+        # Get API calls count from logs
+ 
+        
+        # Construct response
+        user_details = UserDetailsResponse(
+            username=user.username,
+            email=user.email,
+            # total_documents=total_documents,
+        )
+
+        
+        return user_details
+        
+    except Exception as e:
+        logging.error(f"Error retrieving user details: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error retrieving user details: {str(e)}"
+        )
 @mongo_router.post("/doc_upload/")
 async def doc_upload(
     files: List[UploadFile] = File(...),
@@ -88,10 +126,10 @@ async def doc_upload(
                 "id": str(result.inserted_id),
             })
             # Log file upload action
-            log_action(token, "upload", {
+            log_action(token, "uploaded", {
                 "filename": file.filename,
                 "file_type": file.content_type,
-                "operation": "upload"
+                "operation": "uploaded"
             })
 
         # Upload GitHub link
@@ -107,9 +145,9 @@ async def doc_upload(
                 "github_repo_link": github_repo_link
             })
             # Log GitHub link upload action
-            log_action(token, "upload", {
+            log_action(token, "added", {
                 "github_repo_link": github_repo_link,
-                "operation": "upload"
+                "operation": "added"
             })
         
         # Upload Website link
@@ -125,9 +163,9 @@ async def doc_upload(
                 "website_link": website_link
             })
             # Log Website link upload action
-            log_action(token, "upload", {
+            log_action(token, "added", {
                 "website_link": website_link,
-                "operation": "upload"
+                "operation": "added"
             })
         
         response = {
@@ -194,7 +232,7 @@ async def doc_delete(
         # Log delete action
         log_action(token, "delete", {
             "document_id": doc_id,
-            "operation": "delete"
+            "operation": "deleted"
         })
 
         return {"message": "Document deleted successfully"}
