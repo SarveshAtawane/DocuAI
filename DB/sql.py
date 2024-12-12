@@ -2,12 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from auth import email_verification
 import bcrypt
-from datetime import datetime, timedelta
-from datetime import datetime, timezone
-import datetime
 import jwt
 import secrets
 from pymongo import MongoClient
@@ -17,17 +14,22 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel, HttpUrl
-import jwt
-import logging
+import pytz
 import datetime
-
-
+from datetime import timedelta
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./DB/sql_app.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 security = HTTPBearer()
+
+# Define IST timezone
+IST = pytz.timezone('Asia/Kolkata')
+
+def get_ist_time():
+    utc_now = datetime.datetime.now(datetime.timezone.utc)
+    return utc_now.astimezone(IST)
 
 class User(Base):
     __tablename__ = "users"
@@ -43,15 +45,13 @@ class OTP(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     email = Column(String, index=True)
     otp = Column(String)
-    created_at = Column(DateTime, default=datetime.datetime.now(timezone.utc))
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+    # Ensure the DateTime column is timezone-aware
+    created_at = Column(DateTime(timezone=True), default=get_ist_time)
 
-# Update the Pydantic models with correct configuration
 class UserStatsUpdate(BaseModel):
     total_documents: int | None = None
     api_calls: int | None = None
-    used_model: str | None = None  # Changed from model_used to avoid namespace conflict
+    used_model: str | None = None
 
 class UserStatsResponse(BaseModel):
     username: str
@@ -59,12 +59,12 @@ class UserStatsResponse(BaseModel):
     total_documents: int
     api_calls: int
     api_key: str
-    used_model: str  # Changed from model_used to avoid namespace conflict
-    created_at: datetime
-    updated_at: datetime
+    used_model: str
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     model_config = ConfigDict(
-        from_attributes=True,  # This replaces orm_mode
+        from_attributes=True,
         arbitrary_types_allowed=True
     )
 
@@ -76,11 +76,11 @@ class UserStats(Base):
     total_documents = Column(Integer, default=0)
     api_calls = Column(Integer, default=0)
     api_key = Column(String, unique=True)
-    used_model = Column(String, default="none")  # Changed from model_used
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    used_model = Column(String, default="none")
+    created_at = Column(DateTime(timezone=True), default=get_ist_time)
+    updated_at = Column(DateTime(timezone=True), default=get_ist_time, onupdate=get_ist_time)
 
-Base.metadata.create_all(bind=engine)  # Recreate all tables with the updated schema
+Base.metadata.create_all(bind=engine)
 
 sql_router = APIRouter()
 
@@ -106,23 +106,29 @@ class OTPVerify(BaseModel):
     email: str
     otp: str
 
+class ResendOTPRequest(BaseModel):
+    email: str
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
 def generate_api_key(length: int = 16) -> str:
-    # Characters to use for API key generation
     characters = "abcdefghijklmnopqrstuvwxyz"
-    # Generate random API key
     api_key = ''.join(secrets.choice(characters) for _ in range(length))
-    
-    # Insert a hyphen after every 4 characters
     api_key = '-'.join(api_key[i:i+4] for i in range(0, len(api_key), 4))
     return api_key
-def get_ist_time():
-    return datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
+
+def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    token = credentials.credentials
+    db_user = db.query(User).filter(User.token == token).first()
+    if not db_user or db_user.token == "None":
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+    return token
+
 @sql_router.post("/signin/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     print("Creating user")
@@ -134,7 +140,7 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
     
     db_user = User(username=user.username, email=user.email, hashed_password=hashed_password.decode('utf-8'), is_verified=False, token=None)
-    db_otp = OTP(email=user.email, otp=otp, created_at=datetime.now(timezone.utc))
+    db_otp = OTP(email=user.email, otp=otp)
     
     db.add(db_user)
     db.add(db_otp)
@@ -142,7 +148,6 @@ async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     
     return db_user
-
 
 @sql_router.post("/login/")
 async def login_user(user: UserLogin, db: Session = Depends(get_db)):
@@ -155,7 +160,6 @@ async def login_user(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Email not verified")
     
     return {"message": "Login successful", "user": {"id": db_user.id, "username": db_user.username, "email": db_user.email, "is_verified": db_user.is_verified, "token": db_user.token}}
-
 @sql_router.post("/verify-otp/")
 async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     db_otp = db.query(OTP).filter(OTP.email == otp_data.email).order_by(OTP.created_at.desc()).first()
@@ -165,23 +169,28 @@ async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
     if db_otp.otp != otp_data.otp:
         raise HTTPException(status_code=400, detail="Invalid OTP")
     
-    db_otp_time = db_otp.created_at.replace(tzinfo=timezone.utc)
-    if datetime.now(timezone.utc) - db_otp_time > timedelta(minutes=1):
-        print("current time ", datetime.now(timezone.utc))
-        print("otp time ", db_otp_time)
+    current_time = get_ist_time()
+    
+    # Ensure OTP time is timezone-aware
+    otp_time = db_otp.created_at
+    if otp_time.tzinfo is None:
+        otp_time = IST.localize(otp_time)
+    else:
+        otp_time = otp_time.astimezone(IST)
+    
+    # Now both times are timezone-aware and in IST
+    if (current_time - otp_time) > timedelta(minutes=1):
         raise HTTPException(status_code=400, detail="OTP expired.")
     
-    # Mark user as verified and assign a verification token
     db_user = db.query(User).filter(User.email == otp_data.email).first()
     db_user.is_verified = True
     token = jwt.encode({"user_id": db_user.id}, "secret_key", algorithm="HS256")
     db_user.token = token
     db.commit()
     
-    # Delete the used OTP
     db.delete(db_otp)
     db.commit()
-        # Create user stats
+
     api_key = generate_api_key()
     db_stats = UserStats(
         username=db_user.username,
@@ -189,30 +198,20 @@ async def verify_otp(otp_data: OTPVerify, db: Session = Depends(get_db)):
         total_documents=0,
         api_calls=0,
         api_key=api_key,
-        used_model="none"  # Changed from model_used
+        used_model="none"
     )
-    
     
     db.add(db_stats)
     db.commit()
     db.refresh(db_stats)
     return {"message": "Email verified successfully", "user": {"id": db_user.id, "username": db_user.username, "email": db_user.email, "is_verified": db_user.is_verified, "token": db_user.token}}
-class ResendOTPRequest(BaseModel):
-    email: str
-# Function to verify JWT token
-def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    token = credentials.credentials
-    db_user = db.query(User).filter(User.token == token).first()
-    if not db_user or db_user.token == "None":
-        raise HTTPException(status_code=401, detail="Invalid or missing token")
-    return token
+
 @sql_router.get("/user-stats/", response_model=UserStatsResponse)
 async def get_user_stats(token: str = Depends(verify_jwt), db: Session = Depends(get_db)):
     db_stats = db.query(UserStats).filter(UserStats.token == token).first()
     if not db_stats:
         raise HTTPException(status_code=404, detail="Stats not found")
     return db_stats
-
 
 @sql_router.put("/user-stats/update")
 async def update_user_stats(
@@ -231,7 +230,7 @@ async def update_user_stats(
     if updates.used_model is not None:
         db_stats.used_model = updates.used_model
 
-    db_stats.updated_at = datetime.now(timezone.utc)
+    db_stats.updated_at = get_ist_time()
     db.commit()
     db.refresh(db_stats)
 
@@ -264,7 +263,7 @@ async def increment_user_stats(
     if used_model:
         db_stats.used_model = used_model
 
-    db_stats.updated_at = datetime.now(timezone.utc)
+    db_stats.updated_at = get_ist_time()
     db.commit()
     db.refresh(db_stats)
 
@@ -280,19 +279,16 @@ async def regenerate_api_key(token: str = Depends(verify_jwt), db: Session = Dep
     db_stats = db.query(UserStats).filter(UserStats.token == token).first()
     if not db_stats:
         raise HTTPException(status_code=404, detail="Stats not found")
-    
-    # Generate new API key
     new_api_key = generate_api_key()
-    
-    # Update the API key
     db_stats.api_key = new_api_key
-    db_stats.updated_at = datetime.now(timezone.utc)
+    db_stats.updated_at = get_ist_time()
     db.commit()
     
     return {
         "message": "API key regenerated successfully",
         "new_api_key": new_api_key
     }
+
 @sql_router.post("/resend-verification-email/")
 async def resend_verification_email(request: ResendOTPRequest, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.email == request.email).first()
@@ -304,11 +300,9 @@ async def resend_verification_email(request: ResendOTPRequest, db: Session = Dep
     
     otp = email_verification.send_email_with_otp(db_user.email, db_user.username)
     
-    # Delete any existing OTPs for this email
     db.query(OTP).filter(OTP.email == request.email).delete()
     
-    # Create a new OTP
-    db_otp = OTP(email=db_user.email, otp=otp, created_at=datetime.now(timezone.utc))
+    db_otp = OTP(email=db_user.email, otp=otp)
     db.add(db_otp)
     db.commit()
     

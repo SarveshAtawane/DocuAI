@@ -8,6 +8,7 @@ import VerifyOTP from "./components/VerifyOTP";
 import Dashboard from './components/Dashboard';
 import Information from './components/Information'; 
 import Use from './components/Use';
+import Settings from './components/Settings';
 function App() {
   return (
     <Router>
@@ -19,6 +20,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/information" element={<Information />} />
         <Route path="/how-to-use" element={<Use />} />
+        <Route path="*" element={<Home />} />
+        <Route path="/settings" element={<Settings />} />
+
       </Routes>
     </Router>
   );

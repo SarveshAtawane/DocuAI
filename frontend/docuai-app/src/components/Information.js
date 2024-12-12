@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Upload, Link } from 'lucide-react';
+import React, { useState , useEffect} from 'react';
+import { Upload, Link, Trash2 } from 'lucide-react';
 import './Information.css';
 
 const Information = () => {
@@ -7,6 +7,8 @@ const Information = () => {
   const [githubLink, setGithubLink] = useState('');
   const [websiteLinks, setWebsiteLinks] = useState(['']);
   const [uploading, setUploading] = useState(false);
+  const [documents, setDocuments] = useState([]);
+  const [refreshDocuments, setRefreshDocuments] = useState(false);
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files);
@@ -21,7 +23,34 @@ const Information = () => {
       return uniqueFiles;
     });
   };
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/documents/', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('apiKey')}`
+          }
+        });
 
+        if (!response.ok) {
+          throw new Error('Failed to fetch documents');
+        }
+
+        const data = await response.json();
+        console.log('Fetched Documents:', data);
+
+        // Set documents to data.documents array if it exists
+        setDocuments(data.documents || []);
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        setDocuments([]); // Ensure documents is an empty array on failure
+      }
+    };
+
+    fetchDocuments();
+  }, [refreshDocuments]);
+  
   const removeFile = (index) => {
     setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
   };
@@ -70,6 +99,7 @@ const Information = () => {
         },
         body: formData
       });
+   
 
       if (!response.ok) {
         throw new Error('Upload failed');
@@ -79,11 +109,32 @@ const Information = () => {
       setFiles([]);
       setGithubLink('');
       setWebsiteLinks(['']);
+      setRefreshDocuments(prev => !prev);
       
     } catch (error) {
       console.error('Error uploading:', error);
     } finally {
       setUploading(false);
+    }
+  };
+  const handleDocumentDelete = async (docId) => {
+    try {
+      const response = await fetch(`http://localhost:8000/doc_delete/${docId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('apiKey')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete document');
+      }
+
+      // Refresh the documents list after successful deletion
+      setRefreshDocuments(prev => !prev);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      // Optional: Add user-friendly error handling (e.g., toast notification)
     }
   };
 
@@ -193,6 +244,36 @@ const Information = () => {
           >
             {uploading ? 'Uploading...' : 'Upload All'}
           </button>
+
+
+          {/* All Documents */}
+          <div className="documents-section">
+        <h2>All Documents</h2>
+        {Array.isArray(documents) && documents.length > 0 ? (
+          <ul className="documents-list">
+            {documents.map((doc, index) => (
+              <li key={doc._id || doc.id || index} className="document-item">
+                <span className="document-name">
+                  {doc.filename || doc.website_link}
+                </span>
+                <button 
+                  onClick={() => handleDocumentDelete(doc._id || doc.id)}
+                  className="delete-document-button"
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : Array.isArray(documents) && documents.length === 0 ? (
+          <p>No documents available</p>
+        ) : (
+          <p>Loading...</p>
+        )}
+      </div>
+
+
+
         </div>
       </div>
     </div>

@@ -4,14 +4,16 @@ body {
     background-color: #000000;
     color: #e0e0e0;
     margin: 0;
+    overflow: hidden; /* Prevent body-level scrolling */
 }
 
 /* Container Styles */
 .dashboard-container {
     display: flex;
-    min-height: 100vh;
+    height: 100vh; /* Use height instead of min-height */
     background-color: #000000;
     color: #e0e0e0;
+    overflow: hidden; /* Prevent container-level scrolling */
 }
 
 /* Sidebar Styles */
@@ -19,13 +21,23 @@ body {
     width: 250px;
     background-color: #111;
     padding: 20px;
+    overflow: hidden; /* Prevent scrolling */
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar h2 {
     font-size: 26px;
     color: #fff;
     margin-bottom: 40px;
+    flex-shrink: 0;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .sidebar-nav a {
@@ -36,6 +48,7 @@ body {
     padding: 12px;
     border-radius: 5px;
     transition: background-color 0.3s;
+    flex-shrink: 0;
 }
 
 .sidebar-nav a:hover {
@@ -52,13 +65,40 @@ body {
     flex-grow: 1;
     padding: 40px;
     background-color: #000000;
+    overflow-y: auto; /* Allow main content to scroll */
 }
 
+/* Rest of the CSS remains the same */
 .page-title {
     font-size: 36px;
     color: #ffffff;
     margin-bottom: 20px;
 }
+
+/* ... (rest of the existing CSS) ... */
+.document-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .delete-document-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .delete-document-button:hover {
+    background-color: #ff3333;
+  }
 
 /* Upload Section */
 .upload-sections {

@@ -50,8 +50,30 @@ const Dashboard = () => {
     alert('API key copied to clipboard!');
   };
 
-  const handleNavigation = (pageId) => {
-    console.log(`Navigating to page: ${pageId}`);
+  const handleResetApiKey = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/regenerate-api-key', {}, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('apiKey')}` }
+      });
+      setUserData((prevData) => ({ ...prevData, apiKey: response.data.new_api_key }));
+      alert('API key reset successfully!');
+    } catch (error) {
+      console.error('Error resetting API key:', error);
+      alert('Failed to reset API key.');
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const email = prompt('Enter your registered email to reset the password:');
+    if (email) {
+      try {
+        await axios.post('http://localhost:8000/reset-password', { email });
+        alert('Password reset email sent successfully!');
+      } catch (error) {
+        console.error('Error resetting password:', error);
+        alert('Failed to send password reset email.');
+      }
+    }
   };
 
   const formatTimestampToAgoIST = (timestamp) => {
@@ -92,9 +114,9 @@ const Dashboard = () => {
           <h2>DocuAI</h2>
         </div>
         <nav className="sidebar-nav">
-          <a href="/dashboard" className="active">Dashboard</a>
+          <a href="/dashboard">Dashboard</a>
           <a href="/information">Add Information</a>
-          <a href="/settings">Settings</a>
+          <a href="/settings" className="active">Settings</a>
         </nav>
       </div>
 
@@ -104,40 +126,22 @@ const Dashboard = () => {
           <h1>Welcome, <span className="username">{userData.username}</span>!</h1>
         </div>
 
-        {/* Stats Section */}
-        <div className="stats-container">
-          <div className="stat-card">
-            <h3>Total Documents</h3>
-            <p>{userData.totalDocuments}</p>
-          </div>
-          <div className="stat-card">
-            <h3>API Calls (This Month)</h3>
-            <p>{userData.apiCalls}</p>
-          </div>
-        </div>
+      
 
-        {/* Recent Activity */}
-        <div className="activity-container">
-          <h2>Recent Activity</h2>
-          {recentActivity.map((activity, index) => (
-            <div key={index} className="activity-item">
-              <div>
-                <span className="activity-type">{activity.action} </span>
-                <span className="activity-details">
-                  {activity.action === 'added' ? `${activity.details.website_link}` : `${activity.details.filename}`}
-                  
-                </span>
-              </div>
-              <span className="activity-time">{formatTimestampToAgoIST(activity.timestamp)}</span>
-            </div>
-          ))}
-        </div>
+     
 
         {/* API Key Section */}
         <div className="api-key-container">
           <h2>Your API Key</h2>
           <div className="api-key-box">{userData.apiKey}</div>
           <button onClick={handleCopyApiKey} className="copy-button">Copy API Key</button>
+          <button onClick={handleResetApiKey} className="reset-button">Reset API Key</button>
+        </div>
+
+        {/* Reset Password Section */}
+        <div className="reset-password-container">
+          <h2>Reset Password</h2>
+          <button onClick={handleResetPassword} className="reset-button">Reset Password</button>
         </div>
       </div>
     </div>
