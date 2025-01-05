@@ -9,6 +9,8 @@ import logging
 from datetime import datetime
 from celery import Celery
 from celery.result import AsyncResult
+import time
+import threading
 from DB.mongo import verify_jwt, log_action, db
 
 # Create router and Celery app with Redis result backend
@@ -27,6 +29,8 @@ celery_app.conf.update(
     result_serializer='json',
     accept_content=['json']
 )
+
+fin = []  # Global list to track URLs (this seems to be a potential debug/placeholder variable)
 
 class CrawlConfig(BaseModel):
     max_pages: int = 50
@@ -67,14 +71,47 @@ def fetch_page_content_sync(url: str) -> tuple:
         logging.error(f"Error fetching {url}: {str(e)}")
         return None, None, None
 
-@celery_app.task(bind = True,name="path.to.process_website_content", queue="crawl_queue")
-def process_website_content(self, url: str, token: str, visited_urls: List[str], config: Dict):
+# New function to periodically poll crawl status
+def poll_crawl_status(task_ids: List[str], token: str):
+    """
+    Periodically poll the status of crawl tasks.
+    
+    :param task_ids: List of task IDs to monitor
+    :param token: User's authentication token
+    """
+    while task_ids:
+        for task_id in task_ids.copy():
+            try:
+                task_result = AsyncResult(task_id, app=celery_app)
+                
+                if task_result.ready():
+                    # Task is completed
+                    print(f"Crawl task {task_id} completed for token {token}")
+                    # print(f"Task result: {task_result.result}")
+                    
+                    # Remove completed task from monitoring list
+                    task_ids.remove(task_id)
+                else:
+                    print(f"Task {task_id} still in progress: {task_result.status}")
+            
+            except Exception as e:
+                logging.error(f"Error checking task status: {str(e)}")
+        
+        # Wait for a minute before next check
+        time.sleep(60)
+        
+        # Break if all tasks are completed
+        if not task_ids:
+            break
+
+@celery_app.task(bind=True, name="path.to.process_website_content", queue="crawl_queue")
+def process_website_content(self, url: str, token: str, visited_urls: List[str], config: Dict, total_urls: Optional[List[str]] = None):
     try:
         # Update task state to show progress
         self.update_state(state='PROCESSING', meta={'url': url})
         
         collection = db[token]
-        text_content, title, soup = fetch_page_content_sync(url)  # Use the synchronous version
+        text_content, title, soup = fetch_page_content_sync(url)
         
         if not text_content:
             return {
@@ -82,7 +119,6 @@ def process_website_content(self, url: str, token: str, visited_urls: List[str],
                 "error": f"Failed to fetch content from {url}",
                 "processed_urls": visited_urls
             }
-        # Create document
         website_document = {
             "type": "website_content",
             "url": url,
@@ -104,11 +140,9 @@ def process_website_content(self, url: str, token: str, visited_urls: List[str],
             "document_id": str(result.inserted_id),
             "operation": "crawl"
         })
-        
         # Find and queue child pages
         queued_urls = []
         current_count = len(visited_urls)
-        
         if current_count < config['max_pages']:
             for link in soup.find_all('a', href=True):
                 child_url = urljoin(url, link['href'])
@@ -125,11 +159,14 @@ def process_website_content(self, url: str, token: str, visited_urls: List[str],
                         
             # Queue child pages, passing config for each recursive call
             for child_url in queued_urls:
+                print('child_url', child_url)
+                fin.append(child_url)
                 process_website_content.delay(
                     child_url,
                     token,
                     visited_urls,
-                    config  # Ensure config is passed here
+                    config,
+                    total_urls  # Pass total_urls through
                 )
         
         return {
@@ -150,6 +187,24 @@ def process_website_content(self, url: str, token: str, visited_urls: List[str],
             "processed_urls": visited_urls
         }
 
+@celery_app.task
+def send_crawl_completion_notification(token):
+    """
+    Optional task to send a notification or perform actions 
+    when crawling is complete for a specific token
+    """
+    try:
+        # Example: Could send an email, update a status in database, etc.
+        logging.info(f"Crawl completed for token {token}. Sending notification.")
+        
+        # You could add custom logic here like:
+        # - Sending an email
+        # - Updating a user dashboard
+        # - Triggering post-processing of crawled data
+        
+    except Exception as e:
+        logging.error(f"Error in completion notification: {str(e)}")
+
 @crawler_router.post("/start-crawl/")
 async def start_website_crawl(
     config: CrawlConfig,
@@ -162,24 +217,21 @@ async def start_website_crawl(
         # Find all website links stored for the user
         website_docs = collection.find({"type": "website_link"})
         
+        # Collect all valid URLs
+        all_urls = [doc.get("website_link") for doc in website_docs if is_valid_url(doc.get("website_link"))]
+        
         crawl_tasks = []
-        for doc in website_docs:
-            url = doc.get("website_link")
-            if not url or not is_valid_url(url):
-                continue
-                
-            # Initialize crawl configuration
-            crawl_config = {
-                "max_pages": config.max_pages,
-                "exclude_patterns": config.exclude_patterns
-            }
-            
-            # Start crawling task, ensuring all arguments including config are passed
+        for url in all_urls:
+            # Start crawling task, passing all URLs for completion tracking
             task = process_website_content.delay(
                 url,
                 token,
                 [url],
-                crawl_config  # Pass crawl_config here
+                {
+                    "max_pages": config.max_pages,
+                    "exclude_patterns": config.exclude_patterns
+                },
+                all_urls  # Pass all URLs to track completion
             )
             crawl_tasks.append({
                 "url": url,
@@ -188,6 +240,15 @@ async def start_website_crawl(
         
         if not crawl_tasks:
             return {"message": "No website links found to crawl"}
+        
+        # Start a thread to poll task status every minute
+        task_ids = [task['task_id'] for task in crawl_tasks]
+        polling_thread = threading.Thread(
+            target=poll_crawl_status, 
+            args=(task_ids, token), 
+            daemon=True
+        )
+        polling_thread.start()
             
         return {
             "message": "Website crawling started",
@@ -198,7 +259,7 @@ async def start_website_crawl(
         logging.error(f"Error starting crawl: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
+# Rest of the code remains the same (get_crawl_status and get_crawled_content methods)
 @crawler_router.get("/crawl-status/{task_id}")
 async def get_crawl_status(
     task_id: str,

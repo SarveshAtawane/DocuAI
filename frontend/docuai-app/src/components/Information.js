@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, Link, Trash2 } from 'lucide-react';
 import './Information.css';
 
@@ -12,10 +12,9 @@ const Information = () => {
 
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files);
-    setFiles(prevFiles => {
-      // Combine existing files with new ones, avoiding duplicates
+    setFiles((prevFiles) => {
       const uniqueFiles = [...prevFiles, ...newFiles].reduce((acc, file) => {
-        if (!acc.find(existingFile => existingFile.name === file.name)) {
+        if (!acc.find((existingFile) => existingFile.name === file.name)) {
           acc.push(file);
         }
         return acc;
@@ -23,14 +22,15 @@ const Information = () => {
       return uniqueFiles;
     });
   };
+
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
         const response = await fetch('http://localhost:8000/documents/', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('apiKey')}`
-          }
+            Authorization: `Bearer ${localStorage.getItem('apiKey')}`,
+          },
         });
 
         if (!response.ok) {
@@ -39,20 +39,18 @@ const Information = () => {
 
         const data = await response.json();
         console.log('Fetched Documents:', data);
-
-        // Set documents to data.documents array if it exists
         setDocuments(data.documents || []);
       } catch (error) {
         console.error('Error fetching documents:', error);
-        setDocuments([]); // Ensure documents is an empty array on failure
+        setDocuments([]);
       }
     };
 
     fetchDocuments();
   }, [refreshDocuments]);
-  
+
   const removeFile = (index) => {
-    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
   const handleWebsiteLinkChange = (index, value) => {
@@ -74,19 +72,11 @@ const Information = () => {
     setUploading(true);
     try {
       const formData = new FormData();
-      
-      // Append files
-      files.forEach(file => {
-        formData.append('files', file);
-      });
-      
-      // Append GitHub link if provided
+      files.forEach((file) => formData.append('files', file));
       if (githubLink) {
         formData.append('github_repo_link', githubLink);
       }
-      
-      // Append website links if provided
-      websiteLinks.forEach(link => {
+      websiteLinks.forEach((link) => {
         if (link) {
           formData.append('website_link', link);
         }
@@ -95,52 +85,55 @@ const Information = () => {
       const response = await fetch('http://localhost:8000/doc_upload/', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('apiKey')}`
+          Authorization: `Bearer ${localStorage.getItem('apiKey')}`,
         },
-        body: formData
+        body: formData,
       });
-   
 
       if (!response.ok) {
         throw new Error('Upload failed');
       }
 
-      // Clear form after successful upload
       setFiles([]);
       setGithubLink('');
       setWebsiteLinks(['']);
-      setRefreshDocuments(prev => !prev);
-      
+      setRefreshDocuments((prev) => !prev);
     } catch (error) {
       console.error('Error uploading:', error);
     } finally {
       setUploading(false);
     }
   };
+
+  const generate_embedding = async () => {
+    try {
+      console.log('Generating embeddings...');
+    } catch (error) {
+      console.error('Error generating embeddings:', error);
+    }
+  };
+
   const handleDocumentDelete = async (docId) => {
     try {
       const response = await fetch(`http://localhost:8000/doc_delete/${docId}/`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('apiKey')}`
-        }
+          Authorization: `Bearer ${localStorage.getItem('apiKey')}`,
+        },
       });
 
       if (!response.ok) {
         throw new Error('Failed to delete document');
       }
 
-      // Refresh the documents list after successful deletion
-      setRefreshDocuments(prev => !prev);
+      setRefreshDocuments((prev) => !prev);
     } catch (error) {
       console.error('Error deleting document:', error);
-      // Optional: Add user-friendly error handling (e.g., toast notification)
     }
   };
 
   return (
     <div className="dashboard-container">
-      {/* Sidebar */}
       <div className="sidebar">
         <div className="sidebar-header">
           <h2>DocuAI</h2>
@@ -152,12 +145,9 @@ const Information = () => {
         </nav>
       </div>
 
-      {/* Main Content */}
       <div className="main-content">
         <h1 className="page-title">Add Information</h1>
-        
         <div className="upload-sections">
-          {/* Document Upload Section */}
           <div className="upload-card">
             <div className="card-header">
               <h2>
@@ -173,9 +163,7 @@ const Information = () => {
                 onChange={handleFileChange}
                 className="file-input"
               />
-              <div className="file-types">
-                Supported formats: PDF, TXT
-              </div>
+              <div className="file-types">Supported formats: PDF, TXT</div>
               {files.length > 0 && (
                 <div className="selected-files">
                   <h4>Selected files:</h4>
@@ -183,10 +171,7 @@ const Information = () => {
                     {files.map((file, index) => (
                       <li key={index} className="file-item">
                         {file.name}
-                        <button
-                          onClick={() => removeFile(index)}
-                          className="remove-button"
-                        >
+                        <button onClick={() => removeFile(index)} className="remove-button">
                           Remove
                         </button>
                       </li>
@@ -197,7 +182,6 @@ const Information = () => {
             </div>
           </div>
 
-          {/* Website Links */}
           <div className="upload-card">
             <div className="card-header">
               <h2>
@@ -206,74 +190,71 @@ const Information = () => {
               </h2>
             </div>
             <div className="card-content">
-              <div className="website-links">
-                {websiteLinks.map((link, index) => (
-                  <div key={index} className="website-link-input">
-                    <input
-                      type="url"
-                      placeholder="Enter website URL"
-                      value={link}
-                      onChange={(e) => handleWebsiteLinkChange(index, e.target.value)}
-                      className="text-input"
-                    />
-                    {websiteLinks.length > 1 && (
-                      <button
-                        className="remove-button"
-                        onClick={() => removeWebsiteLink(index)}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button 
-                  onClick={addWebsiteLink} 
-                  className="add-button"
-                >
-                  Add Another Website Link
-                </button>
-              </div>
+              {websiteLinks.map((link, index) => (
+                <div key={index} className="website-link-input">
+                  <input
+                    type="url"
+                    placeholder="Enter website URL"
+                    value={link}
+                    onChange={(e) => handleWebsiteLinkChange(index, e.target.value)}
+                    className="text-input"
+                  />
+                  {websiteLinks.length > 1 && (
+                    <button onClick={() => removeWebsiteLink(index)} className="remove-button">
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button onClick={addWebsiteLink} className="add-button">
+                Add Another Website Link
+              </button>
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             onClick={handleSubmit}
-            disabled={uploading || (files.length === 0 && !githubLink && websiteLinks.every(link => !link))}
+            disabled={
+              uploading || (files.length === 0 && !githubLink && websiteLinks.every((link) => !link))
+            }
             className="submit-button"
           >
             {uploading ? 'Uploading...' : 'Upload All'}
           </button>
+          <button
+            onClick={generate_embedding}
+            disabled={
+              uploading || (documents.length === 0 && !githubLink && websiteLinks.every((link) => !link))
+            }
+            className="generate-api"
+          >
+            {uploading ? 'Generating...' : 'Generate API Key'}
+          </button>
 
-
-          {/* All Documents */}
           <div className="documents-section">
-        <h2>All Documents</h2>
-        {Array.isArray(documents) && documents.length > 0 ? (
-          <ul className="documents-list">
-            {documents.map((doc, index) => (
-              <li key={doc._id || doc.id || index} className="document-item">
-                <span className="document-name">
-                  {doc.filename || doc.website_link}
-                </span>
-                <button 
-                  onClick={() => handleDocumentDelete(doc._id || doc.id)}
-                  className="delete-document-button"
-                >
-                  <Trash2 size={16} /> Delete
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : Array.isArray(documents) && documents.length === 0 ? (
-          <p>No documents available</p>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
-
-
-
+            <h2>All Documents</h2>
+            {Array.isArray(documents) && documents.length > 0 ? (
+              <ul className="documents-list">
+                {documents.map((doc, index) => (
+                  <li key={doc._id || doc.id || index} className="document-item">
+                    <span className="document-name">
+                      {doc.filename || doc.website_link|| doc.url}
+                    </span>
+                    <button
+                      onClick={() => handleDocumentDelete(doc._id || doc.id)}
+                      className="delete-document-button"
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : Array.isArray(documents) && documents.length === 0 ? (
+              <p>No documents available</p>
+            ) : (
+              <p>Loading...</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

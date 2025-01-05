@@ -31,7 +31,7 @@ const Home = () => {
         <button className="btn btn-primary cta-btn"  onClick={handleSignup}>Start Free Trial</button>
         <div className="features">
           {/* Uncomment this section if you want to show features */}
-          {/* 
+          
           <div className="feature">
             <h3>Easy Upload</h3>
             <p>Simply upload your documentation files and let DocuAI do the rest.</p>
@@ -44,7 +44,7 @@ const Home = () => {
             <h3>Intelligent Assistance</h3>
             <p>Our AI understands context and provides accurate, helpful responses.</p>
           </div>
-          */}
+         
         </div>
       </main>
     </div>

@@ -124,7 +124,12 @@ const Dashboard = () => {
               <div>
                 <span className="activity-type">{activity.action} </span>
                 <span className="activity-details">
-                  {activity.action === 'added' ? `${activity.details.website_link}` : `${activity.details.filename}`}
+                {activity.action === 'added' 
+              ? `${activity.details.website_link}` 
+              : activity.action === 'website_crawl' 
+                ? `${activity.details.url}` 
+                : `${activity.details.filename}`}
+  
                   
                 </span>
               </div>

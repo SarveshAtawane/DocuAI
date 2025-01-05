@@ -96,18 +96,20 @@ async def get_user_details(
             status_code=500, 
             detail=f"Error retrieving user details: {str(e)}"
         )
+import httpx
+
 @mongo_router.post("/doc_upload/")
 async def doc_upload(
     files: List[UploadFile] = File(...),
     github_repo_link: Optional[str] = Form(None),
     website_link: Optional[str] = Form(None),
-    token: str = Depends(verify_jwt)
-    
+    token: str = Depends(verify_jwt),
+    sql_db: Session = Depends(get_db)  # SQLAlchemy database session
 ):
     allowed_types = ["text/plain", "application/pdf"]
     file_results = []
     link_results = []
-
+    total_new_documents = 0  # Track new documents uploaded
     try:
         collection = db[token]
         
@@ -129,6 +131,7 @@ async def doc_upload(
                 "filename": file.filename,
                 "id": str(result.inserted_id),
             })
+            total_new_documents += 1 
             # Log file upload action
             log_action(token, "uploaded", {
                 "filename": file.filename,
@@ -172,6 +175,24 @@ async def doc_upload(
                 "operation": "added"
             })
         
+        # Call the increment_user_stats endpoint to update stats
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                "http://localhost:8000/user-stats/increment",  # Use your base URL here
+                headers={
+                    "Authorization": f"Bearer {token}"  # Pass the token in the Authorization header
+                },
+                params={
+                    "increment_documents": True,  # Increment documents
+                    "increment_api_calls": True,  # Increment API calls
+                }
+            )
+            if response.status_code != 200:
+                logging.error(f"Error incrementing stats: {response.text}")
+            else:
+                logging.info("User stats incremented successfully")
+
+
         response = {
             "message": "Files and links uploaded successfully", 
             "files": file_results,
@@ -280,6 +301,8 @@ async def get_documents(
                 "filename": doc.get("filename"),
                 "type": doc.get("type"),
                 "file_type": doc.get("file_type"),
+                "website_link": doc.get("website_link"),
+                "url": doc.get("url"),
                 # Add other fields as necessary
             }
             for doc in documents
