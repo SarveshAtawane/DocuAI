@@ -17,7 +17,7 @@ from pydantic import BaseModel, HttpUrl
 import pytz
 import datetime
 from datetime import timedelta
-
+import requests
 SQLALCHEMY_DATABASE_URL = "sqlite:///./DB/sql_app.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -39,7 +39,10 @@ class User(Base):
     hashed_password = Column(String)
     is_verified = Column(Boolean, default=False)
     token = Column(String, default="None")
-
+class UserInfo(BaseModel):
+    username: str
+    email: str
+    api_key: str
 class OTP(Base):
     __tablename__ = "otps"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -129,6 +132,104 @@ def verify_jwt(credentials: HTTPAuthorizationCredentials = Depends(security), db
         raise HTTPException(status_code=401, detail="Invalid or missing token")
     return token
 
+
+
+# Add these imports at the top if not already present
+from fastapi import Header
+from typing import Optional
+
+# Add these new models
+class QueryRequest(BaseModel):
+    query: str
+
+class QueryResponse(BaseModel):
+    result: str
+    model_used: str
+
+# Add this helper function for API key validation
+def verify_api_key(api_key: str = Header(...), db: Session = Depends(get_db)):
+    db_stats = db.query(UserStats).filter(UserStats.api_key == api_key).first()
+    if not db_stats:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    return db_stats
+
+@sql_router.post("/query/", response_model=QueryResponse)
+async def process_query(
+    request: QueryRequest,
+    api_key: str = Header(...),
+    db: Session = Depends(get_db)
+):
+    # Verify API key and get user stats
+    db_stats = verify_api_key(api_key, db)
+    print(db_stats.token)
+    try:
+        chat_url = "http://localhost:8800/chat"
+        headers = {
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "query": request.query,
+            "entity_name": 'entity',
+            "token": f"{db_stats.token}_embedding"  # Append _embedding as in your example
+        }
+        
+        # Make the request to chat API
+        response = requests.post(chat_url, headers=headers, json=payload)
+        response.raise_for_status()  # Raise exception for bad status codes
+        
+        # Get response data
+        result = response.json()
+        
+        # Here you would process the query using your model
+        # This is a placeholder for the actual query processing
+        result = f"Processed query: {result.get('response')}"
+        model_used = "your-model-name"  # Replace with actual model name
+        
+        # Update user stats - increment API calls and update used model
+        db_stats.api_calls += 1
+        db_stats.used_model = model_used
+        db_stats.updated_at = get_ist_time()
+        db.commit()
+        print("Query processed")
+        return QueryResponse(
+            result=result,
+            model_used=model_used
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+
+
+
+@sql_router.get("/user-info/", response_model=UserInfo)
+async def get_user_info(token: str = Depends(verify_jwt), db: Session = Depends(get_db)):
+    try:
+        # Decode the JWT to get the user_id
+        payload = jwt.decode(token, "secret_key", algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        
+        # Query the database to get user information
+        db_user = db.query(User).filter(User.id == user_id).first()
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Query the UserStats table instead of UserStatsResponse
+        db_stats = db.query(UserStats).filter(UserStats.token == token).first()
+        if not db_stats:
+            raise HTTPException(status_code=404, detail="User stats not found")
+        print(db_stats.api_key)
+        return UserInfo(
+            username=db_user.username, 
+            email=db_user.email, 
+            api_key=db_stats.api_key
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 @sql_router.post("/signin/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     print("Creating user")
@@ -258,8 +359,6 @@ async def increment_user_stats(
 
     if increment_documents:
         db_stats.total_documents += 1
-    if increment_api_calls:
-        db_stats.api_calls += 1
     if used_model:
         db_stats.used_model = used_model
 

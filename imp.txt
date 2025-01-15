@@ -7,3 +7,6 @@ celery -A embeddings.website_loader worker --loglevel=info --concurrency=2 --max
 
 # Worker for embedding generation tasks (use embedding_queue)
 celery -A embed.celery_app worker --loglevel=info --concurrency=2 --max-memory-per-child=500000 -Q embedding_queue
+
+uvicorn app:app --reload --port 8800
+# in /Desktop/Resume_projects/Faq/Rag_code$ 

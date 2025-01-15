@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --bg-color: #f0f2f5;
+            --card-bg: white;
+            --text-color: #1a1a1a;
+            --code-bg: #edf2f7;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+            transition: background-color 0.3s;
+        }
+        .container {
+            background: var(--card-bg);
+            padding: 32px;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        h2 {
+            margin-top: 0;
+            color: #2d3748;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .api-key {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin: 24px 0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .api-key:hover {
+            background: #edf2f7;
+        }
+        .api-key code {
+            display: block;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 16px;
+            color: #4a5568;
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--code-bg);
+            border-radius: 4px;
+        }
+        .copy-message {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: #48bb78;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .warning {
+            color: #755;
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 12px 16px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .signature {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        .celebrate {
+            font-size: 32px;
+            animation: bounce 1s infinite;
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px;
+            border-radius: 50%;
+            border: none;
+            background: var(--card-bg);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .dark-theme {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --code-bg: #363636;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+    <div class="container">
+        <h2><span class="celebrate">🎉</span> Congratulations {{username}}!</h2>
+        <p>Your API key has been successfully generated.</p>
+        
+        <div class="api-key" onclick="copyApiKey()">
+            <strong>Your API Key:</strong>
+            <code id="apiKey">{{api_key}}</code>
+            <span class="copy-message" id="copyMessage">Copied!</span>
+        </div>
+
+        <div class="warning">
+            Keep this key secure and don't share it with anyone. Use it to authenticate your API requests.
+        </div>
+        
+        <p>Happy coding! 🚀</p>
+        
+        <div class="signature">
+            Best regards,<br>
+            {{sender_name}}
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+        }
+
+        // Copy API key functionality
+        function copyApiKey() {
+            const apiKey = document.getElementById('apiKey').textContent;
+            navigator.clipboard.writeText(apiKey);
+            
+            const message = document.getElementById('copyMessage');
+            message.style.opacity = '1';
+            
+            setTimeout(() => {
+                message.style.opacity = '0';
+            }, 2000);
+        }
+
+        // Replace template variables with actual values
+        function initializePage() {
+            const username = "{{username}}";
+            const apiKey = "{{api_key}}";
+            const senderName = "{{sender_name}}";
+            
+            document.body.innerHTML = document.body.innerHTML
+                .replace(/{{username}}/g, username)
+                .replace(/{{api_key}}/g, apiKey)
+                .replace(/{{sender_name}}/g, senderName);
+        }
+
+        // Initialize the page when loaded
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

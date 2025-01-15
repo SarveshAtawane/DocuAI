@@ -4,21 +4,20 @@ from sentence_transformers import SentenceTransformer
 import logging
 import io
 import base64
-import binascii
 from typing import List
-import fitz  # Import PyMuPDF for PDF handling
+import fitz 
 import torch
-import os
+import sys
+sys.path.append("/home/saru/Desktop/Resume_projects/Faq")
+from auth import email_verification
+# from DB import sql
+import requests
 
-# Set environment variable to disable CUDA in PyTorch explicitly if needed
-# os.environ["CUDA_VISIBLE_DEVICES"] = ""
+BASE_URL = "http://localhost:8000"  # Adjust this to match your server URL
 
-# Configure logging
+
 logging.basicConfig(level=logging.INFO)
-
-# Set multiprocessing start method once
 torch.multiprocessing.set_start_method("spawn", force=True)
-
 def get_mongo_client():
     """Create a MongoDB client within the task to ensure fork safety."""
     return MongoClient("mongodb+srv://sarveshatawane03:y2flIDD1EmOaU5de@cluster0.sssmr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
@@ -63,8 +62,6 @@ def generate_embeddings_task(token: str):
     collection = db[token]
     embedding_collection = db[f"{token}_embedding"]
     embedding_collection.delete_many({})
-
-    # Load model within the task for safe CUDA usage
     model = SentenceTransformer('paraphrase-MiniLM-L6-v2', device='cuda')
 
     for document in collection.find():
@@ -119,5 +116,18 @@ def generate_embeddings_task(token: str):
         except Exception as e:
             logging.error(f"Error processing document {object_id}: {str(e)}")
             continue
-
+    
+    def get_user_info(token: str) -> dict:
+        """Get user information using JWT token"""
+        user_info_url = f"{BASE_URL}/user-info/"
+        headers = {
+            "Authorization": f"Bearer {token}"
+        }
+        response = requests.get(user_info_url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    print(get_user_info(token))
     logging.info("Embedding generation complete.")
+    email_verification.send_api_key_notification(get_user_info(token)["email"], get_user_info(token)["username"], get_user_info(token)["api_key"])
+    # email_verification.send_email_with_otp('sarveshatawane03@gmail.com',"sarves")
+    print("Embedding generation complete ansd I am herreee.")

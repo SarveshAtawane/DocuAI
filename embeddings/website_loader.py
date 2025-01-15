@@ -74,7 +74,7 @@ def fetch_page_content_sync(url: str) -> tuple:
 # New function to periodically poll crawl status
 def poll_crawl_status(task_ids: List[str], token: str):
     """
-    Periodically poll the status of crawl tasks.
+    Periodically poll the status of crawl tasks and generate embeddings upon completion.
     
     :param task_ids: List of task IDs to monitor
     :param token: User's authentication token
@@ -83,22 +83,36 @@ def poll_crawl_status(task_ids: List[str], token: str):
         for task_id in task_ids.copy():
             try:
                 task_result = AsyncResult(task_id, app=celery_app)
-                
                 if task_result.ready():
-                    # Task is completed
                     print(f"Crawl task {task_id} completed for token {token}")
-                    # print(f"Task result: {task_result.result}")
+                    
+                    # Call generate_embeddings API
+                    try:
+                        response = requests.post(
+                            'http://localhost:8080/generate_embeddings',
+                            json={'token': token},
+                            headers={'Content-Type': 'application/json'}
+                        )
+                        
+                        if response.status_code == 200:
+                            print(f"Successfully generated embeddings for token {token}")
+                        else:
+                            print(f"Failed to generate embeddings. Status code: {response.status_code}")
+                            print(f"Response: {response.text}")
+                            
+                    except requests.exceptions.RequestException as api_error:
+                        logging.error(f"Error calling generate_embeddings API: {str(api_error)}")
                     
                     # Remove completed task from monitoring list
                     task_ids.remove(task_id)
                 else:
                     print(f"Task {task_id} still in progress: {task_result.status}")
-            
+                    
             except Exception as e:
                 logging.error(f"Error checking task status: {str(e)}")
-        
+                
         # Wait for a minute before next check
-        time.sleep(60)
+        time.sleep(5)
         
         # Break if all tasks are completed
         if not task_ids:

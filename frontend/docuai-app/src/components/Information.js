@@ -94,22 +94,45 @@ const Information = () => {
         throw new Error('Upload failed');
       }
 
+      alert('Upload successful!');
       setFiles([]);
       setGithubLink('');
       setWebsiteLinks(['']);
       setRefreshDocuments((prev) => !prev);
     } catch (error) {
       console.error('Error uploading:', error);
+      alert('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
   const generate_embedding = async () => {
+    setUploading(true);
     try {
-      console.log('Generating embeddings...');
+      const response = await fetch('http://localhost:8000/start-crawl/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('apiKey')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          max_pages: 3, // Example value, adjust as needed
+          exclude_patterns: [], // Example value, adjust as needed
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate embeddings');
+      }
+
+      const data = await response.json();
+      alert(data.message || 'Embeddings generated successfully!');
     } catch (error) {
       console.error('Error generating embeddings:', error);
+      alert('Failed to generate embeddings.');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -126,9 +149,11 @@ const Information = () => {
         throw new Error('Failed to delete document');
       }
 
+      alert('Document deleted successfully!');
       setRefreshDocuments((prev) => !prev);
     } catch (error) {
       console.error('Error deleting document:', error);
+      alert('Failed to delete document.');
     }
   };
 
@@ -224,7 +249,7 @@ const Information = () => {
           <button
             onClick={generate_embedding}
             disabled={
-              uploading || (documents.length === 0 && !githubLink && websiteLinks.every((link) => !link))
+              uploading || documents.length === 0
             }
             className="generate-api"
           >
@@ -238,7 +263,7 @@ const Information = () => {
                 {documents.map((doc, index) => (
                   <li key={doc._id || doc.id || index} className="document-item">
                     <span className="document-name">
-                      {doc.filename || doc.website_link|| doc.url}
+                      {doc.filename || doc.website_link || doc.url}
                     </span>
                     <button
                       onClick={() => handleDocumentDelete(doc._id || doc.id)}
