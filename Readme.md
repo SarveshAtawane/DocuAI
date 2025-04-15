@@ -82,6 +82,12 @@ To start the project, run the following command:
 - **Celery** – for async tasks like embedding generation  
 - **LangChain + OpenAI / LLM** – powering the RAG pipeline  
 
+## 🎥 Demo Video
+
+
+https://github.com/user-attachments/assets/e283e1f3-dfd7-4613-b860-d5bfa5d33fae
+
+
 ---
 
 ## 📬 Contact  
