@@ -66,10 +66,9 @@ class UserStatsResponse(BaseModel):
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
-    model_config = ConfigDict(
-        from_attributes=True,
-        arbitrary_types_allowed=True
-    )
+    class Config:
+        orm_mode = True
+        arbitrary_types_allowed = True
 
 class UserStats(Base):
     __tablename__ = "user_stats"
@@ -183,7 +182,7 @@ async def process_query(
         
         # Here you would process the query using your model
         # This is a placeholder for the actual query processing
-        result = f"Processed query: {result.get('response')}"
+        result = f"Processed query response: {result.get('response')}"
         model_used = "your-model-name"  # Replace with actual model name
         
         # Update user stats - increment API calls and update used model
@@ -230,6 +229,7 @@ async def get_user_info(token: str = Depends(verify_jwt), db: Session = Depends(
         raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 @sql_router.post("/signin/", response_model=UserResponse)
 async def create_user(user: UserCreate, db: Session = Depends(get_db)):
     print("Creating user")
