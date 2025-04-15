@@ -85,7 +85,10 @@ To start the project, run the following command:
 ## 🎥 Demo Video
 
 
-https://github.com/user-attachments/assets/e283e1f3-dfd7-4613-b860-d5bfa5d33fae
+
+Uploading Demo_docuai.mp4…
+
+
 
 
 ---
