@@ -80,7 +80,7 @@ To start the project, run the following command:
 - **MongoDB** – for storing documents, crawled content, vector embeddings  
 - **PostgreSQL / SQLAlchemy** – for user and OTP management  
 - **Celery** – for async tasks like embedding generation  
-- **LangChain + OpenAI / LLM** – powering the RAG pipeline  
+- **LangChain + Gemini / LLM** – powering the RAG pipeline  
 
 ## 🎥 Demo Video
 
